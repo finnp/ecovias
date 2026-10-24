@@ -54,6 +54,7 @@ input::placeholder { color: #617b8b; opacity: 1; }
 .map-status.show { display: block; }
 .leaflet-container { background: #f6f8fa; font: 13px/1.4 Barlow, sans-serif; }
 .leaflet-tile-pane { filter: saturate(.45); opacity: .6; }
+.leaflet-zoom-anim .leaflet-zoom-animated { transition-duration: 80ms; }
 .leaflet-top.leaflet-right { top: 10px; right: 10px; }
 .leaflet-control-zoom { border: 1px solid #c7d7e2 !important; border-radius: 6px !important; box-shadow: var(--panel-shadow) !important; overflow: hidden; }
 .leaflet-control-zoom a { background: #fff !important; color: var(--blue) !important; }

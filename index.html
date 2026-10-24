@@ -940,6 +940,7 @@ input::placeholder { color: #617b8b; opacity: 1; }
 .map-status.show { display: block; }
 .leaflet-container { background: #f6f8fa; font: 13px/1.4 Barlow, sans-serif; }
 .leaflet-tile-pane { filter: saturate(.45); opacity: .6; }
+.leaflet-zoom-anim .leaflet-zoom-animated { transition-duration: 80ms; }
 .leaflet-top.leaflet-right { top: 10px; right: 10px; }
 .leaflet-control-zoom { border: 1px solid #c7d7e2 !important; border-radius: 6px !important; box-shadow: var(--panel-shadow) !important; overflow: hidden; }
 .leaflet-control-zoom a { background: #fff !important; color: var(--blue) !important; }
@@ -1064,8 +1065,8 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const number=n=>Number(n).toLocaleString('en-GB',{maximumFractionDigits:1});
 let state={kind:'all',region:'all',query:'',selected:null};
 const layers=new Map();let visible=[];let tileFailures=0;
-// Avoid losing wheel input during Leaflet's 250 ms zoom animation.
-const map=L.map('map',{zoomControl:false,zoomSnap:.25,zoomDelta:.5,zoomAnimation:false,preferCanvas:true,scrollWheelZoom:true,wheelPxPerZoomLevel:30,wheelDebounceTime:20,minZoom:5,maxZoom:19});
+// Keep tiles visible while zooming; batch wheel input beyond the 80 ms CSS transition.
+const map=L.map('map',{zoomControl:false,zoomSnap:.25,zoomDelta:.5,zoomAnimation:true,preferCanvas:true,scrollWheelZoom:true,wheelPxPerZoomLevel:30,wheelDebounceTime:100,minZoom:5,maxZoom:19});
 const attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution,maxZoom:19});
 osm.addTo(map);
