@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#245d88">
+<title>Norte & Centro — Ecovias & Ecopistas</title>
+<style>/* LEAFLET_CSS */</style>
+<style>/* EMBEDDED_FONTS */</style>
+<style>/* APP_CSS */</style>
+</head>
+<body>
+<div class="app">
+  <div class="workspace">
+    <aside class="filters" id="filters" aria-label="Filter routes">
+      <div class="intro">
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><label class="sr-only" for="search">Search routes or towns</label><input id="search" type="search" placeholder="Search a route, river or town…" autocomplete="off"></div>
+        <div class="chips" aria-label="Route type"><button class="chip" data-kind="all" aria-pressed="true">Any type</button><button class="chip" data-kind="rail" aria-pressed="false"><i class="dot" style="--kind:var(--rail)"></i>Rail</button><button class="chip" data-kind="river" aria-pressed="false"><i class="dot" style="--kind:var(--river)"></i>River</button><button class="chip" data-kind="coast" aria-pressed="false"><i class="dot" style="--kind:var(--coast)"></i>Coast</button><button class="chip" data-kind="path" aria-pressed="false"><i class="dot" style="--kind:var(--path)"></i>Other</button></div>
+        <div class="region-row"><label for="region" class="small-label">Region</label><select id="region"><option value="all">Norte & Centro</option><option value="norte">Norte</option><option value="centro">Centro</option><optgroup label="Norte"><option>Porto & Douro</option><option>Ave & Cávado</option><option>Alto Minho</option><option>Trás-os-Montes</option></optgroup><optgroup label="Centro & nearby Oeste"><option>Centro · Aveiro & coast</option><option>Centro · Viseu & Mondego</option><option>Centro · Leiria & Oeste</option><option>Centro · Beiras</option></optgroup></select></div>
+      </div>
+      <div class="result-head"><span id="result-count" role="status" aria-live="polite"></span><div class="filter-actions"><button id="reset-filters" hidden>Reset</button><button id="fit-results">Fit results</button><button class="about-button" id="about" aria-label="About this map">i</button></div></div>
+    </aside>
+    <main class="map-area" aria-label="Interactive greenways map">
+      <div id="map" aria-label="Map of ecovias, ecopistas and cycleways in northern and central Portugal"></div>
+      <div id="map-status" class="map-status" role="status"></div>
+      <div class="legend"><div class="legend-categories"><span><i class="dot" style="--kind:var(--rail)"></i>Rail trail</span><span><i class="dot" style="--kind:var(--river)"></i>River</span><span><i class="dot" style="--kind:var(--coast)"></i>Coast</span><span><i class="dot" style="--kind:var(--path)"></i>Other</span></div><div class="legend-types"><span><i class="mini-line"></i>Published GPS</span><span><i class="mini-line osm"></i>OSM sections</span><span><i class="mini-pin"></i>Location</span></div></div>
+      <section id="detail" class="detail" aria-label="Selected route details"></section>
+    </main>
+  </div>
+</div>
+<dialog class="info-dialog" id="info-dialog"><button class="close-detail" id="close-info" aria-label="Close map information">×</button><h2>About this map</h2>
+<p>A curated selection of ecovias, ecopistas and a few local cycleways across northern and central Portugal, including nearby Oeste coastal routes. It covers these areas geographically, with extra detail around Porto; it is not an exhaustive inventory or a live routing service. The Chaves–Verín entry includes a small cross-border continuation.</p>
+<h3>What the lines mean</h3><ul><li><b>Solid lines:</b> GPS coordinates published by <a href="https://www.ippatrimonio.pt/pt-pt/ecopistas" target="_blank" rel="noopener">IP Património</a>. A published file can still cover only part of a route; these exceptions appear in the route details.</li><li><b>Dashed lines:</b> route members or named path sections from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. Gaps remain gaps. The line does not establish uninterrupted access or a cycleway separated from traffic.</li><li><b>Hollow pins:</b> approximate locations for routes without an included trace. Numbered pins identify a route location, rather than necessarily its start.</li></ul>
+<h3>Distances & downloads</h3><p>“Published length” comes from the linked route page and can differ from the actual line supplied. “Drawn” measures the included geometry; separate sections are added without connecting gaps. GPX downloads export the displayed sections without routing between them.</p>
+<h3>Sources</h3><p>Each route links to its own source. Principal sources include <a href="https://www.ippatrimonio.pt/pt-pt/ecopistas" target="_blank" rel="noopener">IP Património</a>, <a href="https://www.altominho.pt/pt/visitar/experiencias/natureza/ecovias-e-ecopistas/" target="_blank" rel="noopener">CIM Alto Minho</a>, <a href="https://www.visitepontedelima.pt/pt/turismopdl/index.php?cat=28" target="_blank" rel="noopener">Turismo de Ponte de Lima</a>, <a href="https://www.cm-mira.pt/node/1742" target="_blank" rel="noopener">Município de Mira</a>, <a href="https://www.cm-estarreja.pt/bioria" target="_blank" rel="noopener">BioRia / Estarreja</a>, other municipal and regional visitor guides, and OpenStreetMap via Overpass (snapshot 24 October 2026).</p>
+<h3>Walking & riding</h3><p>Ecovias can include gravel, stairs, narrow paths or wooden walkways. Cycling permission varies; the Vez leaflet specifically lists a summer bicycle restriction. Check the linked source and local signs before setting out. This map does not report live closures or surface conditions. A source notice about disruptions on the Ecovia do Mondego was checked on 24 October 2026 and appears in that route’s details; check its official website for updates.</p>
+<footer>Single HTML document · Leaflet 1.9.4, BSD-2-Clause · OpenStreetMap data © contributors, ODbL · Basemap © OpenStreetMap contributors. Internet is needed for the basemap; route coordinates and the map library are embedded in this document.</footer>
+</dialog>
+<script>/* LEAFLET_JS */</script>
+<script id="route-data" type="application/json">ROUTES_JSON</script>
+<script>
+(() => {
+'use strict';
+const ROUTES=JSON.parse(document.getElementById('route-data').textContent);
+const $=id=>document.getElementById(id);
+const colors={rail:'#237b56',river:'#146eaa',coast:'#a56e09',path:'#786489'};
+const kinds={rail:'Rail trail',river:'River path',coast:'Coastal path',path:'Other greenway'};
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const number=n=>Number(n).toLocaleString('en-GB',{maximumFractionDigits:1});
+let state={kind:'all',region:'all',query:'',selected:null};
+const layers=new Map();let visible=[];let tileFailures=0;
+const map=L.map('map',{zoomControl:false,zoomSnap:.25,zoomDelta:.5,preferCanvas:true,scrollWheelZoom:true,minZoom:5,maxZoom:19});
+const attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution,maxZoom:19});
+osm.addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
+function tileError(){tileFailures++;if(tileFailures>=5){$('map-status').textContent='The background map could not load. Route lines and details still work. Check your internet connection and reload to retry.';$('map-status').classList.add('show');}}
+osm.on('tileerror',tileError);
+map.on('baselayerchange',()=>{tileFailures=0;$('map-status').classList.remove('show');});
+osm.on('tileload',()=>{if(tileFailures===0)$('map-status').classList.remove('show');});
+const sorted=ROUTES;
+ROUTES.forEach((r,i)=>{
+  r.number=i+1;
+  const group=L.featureGroup();
+  const line=r.segments.length?L.polyline(r.segments,{color:colors[r.kind],weight:3.5,opacity:.85,dashArray:r.geometry==='osm'?'6 5':null,lineCap:'round',lineJoin:'round',smoothFactor:.35}).addTo(group):null;
+  if(line){line.bindTooltip(esc(r.name),{sticky:true});line.on('click',()=>selectRoute(r.id,true));}
+  const icon=L.divIcon({className:'route-marker'+(r.geometry==='marker'?' is-marker':''),html:`<div class="route-marker-inner" style="--kind:${colors[r.kind]}">${r.number}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+  const marker=L.marker(r.anchor,{icon,title:r.name,alt:r.name,riseOnHover:true}).addTo(group).bindTooltip(esc(r.name),{direction:'top',offset:[0,-12]});
+  marker.on('click',()=>selectRoute(r.id,true));
+  layers.set(r.id,{group,line,marker});
+});
+function geometryLabel(r){return r.geometry==='published'?(r.geometry_note||'Published GPS track'):r.geometry==='osm'?'OSM mapped sections':'Location marker';}
+function geometryIcon(r){return r.geometry==='marker'?'<i class="mini-pin"></i>':`<i class="mini-line ${r.geometry==='osm'?'osm':''}"></i>`;}
+function matches(r){return(state.kind==='all'||r.kind===state.kind)&&(state.region==='all'||r.region===state.region||(state.region==='norte'&&r.zone==='Norte')||(state.region==='centro'&&r.zone==='Centro'))&&(!state.query||norm([r.name,r.place,r.region,r.description].join(' ')).includes(state.query));}
+function fit(routes,animate=false){let bounds=L.latLngBounds([]);routes.forEach(r=>{r.segments.forEach(s=>s.forEach(p=>bounds.extend(p)));bounds.extend(r.anchor);});if(bounds.isValid()){map.stop();map.fitBounds(bounds,{paddingTopLeft:[35,window.innerWidth<=760?$('filters').getBoundingClientRect().bottom+15:35],paddingBottomRight:[45,110],maxZoom:14,animate});}}
+function render(){
+ visible=sorted.filter(matches);
+ ROUTES.forEach(r=>{const g=layers.get(r.id).group;if(visible.includes(r)){if(!map.hasLayer(g))g.addTo(map);}else if(map.hasLayer(g))map.removeLayer(g);});
+ if(state.selected&&!visible.some(r=>r.id===state.selected))closeDetail();
+ $('result-count').textContent=`${visible.length} ${visible.length===1?'route':'routes'}`;
+ document.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===state.kind)));
+ $('fit-results').disabled=!visible.length;
+ $('reset-filters').hidden=state.kind==='all'&&state.region==='all'&&!state.query;
+ if(!visible.length)$('result-count').textContent='No matching routes';
+}
+function updateHighlight(){ROUTES.forEach(r=>{const l=layers.get(r.id),active=r.id===state.selected;if(l.line){l.line.setStyle({weight:active?6:3.5,opacity:state.selected?(active?1:.45):.85});if(active)l.line.bringToFront();}const el=l.marker.getElement();if(el)el.classList.toggle('is-active',active);l.marker.setZIndexOffset(active?1000:0);});}
+function selectRoute(id,zoom){
+ const r=ROUTES.find(x=>x.id===id);if(!r)return;
+ clearTimeout(searchTimer);
+ state.selected=id;
+ const info=$('detail');info.style.setProperty('--kind',colors[r.kind]);
+ info.innerHTML=`<div class="detail-content"><div class="detail-kicker"><span class="kind-label"><span class="route-number">${r.number}</span>${esc(r.kind_label||kinds[r.kind])}</span><button class="close-detail" id="close-detail" aria-label="Close route details">×</button></div><h2>${esc(r.name)}</h2><div class="detail-place">${esc(r.place.replace(/ · /g,', '))}</div><p class="detail-description">${esc(r.description)}</p><div class="detail-facts"><div><span class="fact-label">${r.length?'Published length¹':'Included geometry'}</span><span class="fact-value">${r.length?number(r.length)+' km':r.mapped_km?number(r.mapped_km)+' km drawn':'Location only'}</span></div><div><span class="fact-label">Region</span><span class="fact-value">${esc(r.region.replace(/^Centro · /,''))}</span></div></div><p class="geometry-info">${geometryIcon(r)} ${esc(geometryLabel(r))}${r.mapped_km?` · ${number(r.mapped_km)} km drawn.`:'.'}${r.geometry==='osm'?' Sections may be incomplete.':''}</p>${r.note?`<div class="notice">${esc(r.note)}</div>`:''}<p class="activity">${esc(r.activity)}</p><div class="detail-actions">${r.segments.length?'<button class="action primary" id="download-gpx">Download GPX</button>':''}<a class="action ${r.segments.length?'':'primary'}" href="${esc(r.url)}" target="_blank" rel="noopener">Route website</a><a class="action" href="https://www.google.com/maps/search/?api=1&query=${r.anchor.join(',')}" target="_blank" rel="noopener">View location</a></div><div class="source-row">Source: <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.source)}</a>${r.access_url?` · <a href="${esc(r.access_url)}" target="_blank" rel="noopener">Park access rules</a>`:''}${r.original?` · <a href="${esc(r.original)}" target="_blank" rel="noopener">Original GPS file</a>`:''}${r.osm_urls.length?` · <a href="${esc(r.osm_urls[0])}" target="_blank" rel="noopener">OSM geometry</a>`:''}${r.length?'<br>¹ Published route length; see source for the section covered.':''}</div><div class="location-note">Pin = representative location, not necessarily the trailhead.</div></div>`;
+ info.classList.add('visible');info.scrollTop=0;$('close-detail').addEventListener('click',closeDetail);
+ if($('download-gpx'))$('download-gpx').addEventListener('click',()=>downloadGPX(r));
+ updateHighlight();
+ if(zoom){const bounds=L.latLngBounds(r.segments.flat().length?r.segments.flat():[r.anchor]);const small=window.innerWidth<=760;const covered=small?map.getSize().y-(info.getBoundingClientRect().top-$('map').getBoundingClientRect().top)+20:55;map.stop();map.fitBounds(bounds,{paddingTopLeft:[35,small?$('filters').getBoundingClientRect().bottom+15:35],paddingBottomRight:small?[35,covered]:[map.getSize().x-info.getBoundingClientRect().left+20,55],maxZoom:r.geometry==='marker'?13:15,animate:false});}
+ try{history.replaceState(null,'','#'+r.id);}catch{}
+}
+function closeDetail(){state.selected=null;$('detail').classList.remove('visible');updateHighlight();try{history.replaceState(null,'',location.pathname+location.search);}catch{}}
+function downloadGPX(r){const xml='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Norte and Centro Greenways Map" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>'+esc(r.name)+'</name><desc>Displayed geometry from '+esc(r.source)+'. Separate sections are not connected. Snapshot 2026-10-24. See '+esc(r.url)+'</desc><copyright author="'+esc(r.geometry==='osm'?'OpenStreetMap contributors':r.source)+'"><license>'+esc(r.geometry==='osm'?'https://opendatacommons.org/licenses/odbl/1-0/':r.url)+'</license></copyright><link href="'+esc(r.url)+'"/></metadata><trk><name>'+esc(r.name)+'</name>'+r.segments.map(s=>'<trkseg>'+s.map(p=>'<trkpt lat="'+p[0]+'" lon="'+p[1]+'"/>').join('')+'</trkseg>').join('')+'</trk></gpx>';const blob=new Blob([xml],{type:'application/gpx+xml'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='norte-'+r.id+'.gpx';a.click();setTimeout(()=>URL.revokeObjectURL(url),15000);}
+function resetFilters(){closeDetail();state={...state,kind:'all',region:'all',query:''};$('search').value='';$('region').value='all';render();fit(visible);}
+document.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>{state.kind=b.dataset.kind;render();updateHighlight();fit(visible);}));
+let searchTimer;
+$('search').addEventListener('input',e=>{state.query=norm(e.target.value.trim());render();updateHighlight();clearTimeout(searchTimer);searchTimer=setTimeout(()=>fit(visible),250);});
+$('region').addEventListener('change',e=>{state.region=e.target.value;render();updateHighlight();fit(visible);});
+$('fit-results').addEventListener('click',()=>fit(visible));
+$('reset-filters').addEventListener('click',resetFilters);
+$('about').addEventListener('click',()=>$('info-dialog').showModal());$('close-info').addEventListener('click',()=>$('info-dialog').close());
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+render();fit(visible,false);
+const initial=location.hash.slice(1);if(ROUTES.some(r=>r.id===initial))selectRoute(initial,true);
+window.addEventListener('resize',()=>{map.invalidateSize();if(state.selected)selectRoute(state.selected,true);else fit(visible,false);});
+window.norteMap={map,routes:ROUTES,getState:()=>({...state}),getVisible:()=>visible.map(r=>r.id)};
+})();
+</script>
+</body>
+</html>
