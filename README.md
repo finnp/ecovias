@@ -1,6 +1,6 @@
 # Ecovias
 
-[Open the map](https://finnp.github.io/ecovias/)
+[Open the map](https://finnpauls.de/ecovias/)
 
 An interactive map of ecovias, ecopistas, coastal cycleways and riverside walks across Norte and Centro, Portugal. Includes 49 places, numbered pins, regional and route-type filters, source links and GPX downloads.
 
